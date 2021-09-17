@@ -7,29 +7,20 @@
 '------------------------------------------------------------------------------
 
 '------STRUCTURES------
-' consider using XML? https://stackoverflow.com/questions/11305/how-to-parse-xml-using-vba 
-
-' Mail data structure
-Type EmailData
-
-    hyperlink As String
-    sender As String
-    subject As String
-    conversationID As String
-    receivedTime As String
-    ' TODO: Add file attachment support in the future: https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/file-object
-
-End Type
 
 ' To package all necessary data before making HTTP requests to create Trello Card
 Type CardPayload
 
-    boardID As String
-    listID AS String
+    ' boardID As String ' This is not necessary for card creation
+    listID As String
+    cardID As String
+    cardName As String
     sender As String
     subject As String
     mailUID As String
     conversationID As String
+    receivedTime As String
+    ' TODO: Add file attachment support in the future: https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/file-object
 
     token As String
     key As String
@@ -45,39 +36,6 @@ Type TrelloCredentialCache
 
 End Type
 
-' ' Error Codes
-' Type ErrorCodes
-
-'     e0 As String
-'     e1 As String
-'     e2 As String
-'     e3 As String
-'     e4 As String
-'     e5 As String
-'     e6 As String
-'     e7 As String
-'     e8 As String
-'     e9 As String
-
-' End Type
-
-
-' '------GLOBAL VARIABLES------
-
-' ' Define Error Structure
-' Dim errorCodes As ErrorCodes
-' errorCodes.e0 = ""
-' errorCodes.e1 = ""
-' errorCodes.e2 = ""
-' errorCodes.e3 = ""
-' errorCodes.e4 = ""
-' errorCodes.e5 = ""
-' errorCodes.e6 = ""
-' errorCodes.e7 = ""
-' errorCodes.e8 = ""
-' errorCodes.e9 = ""
-
-
 '------SUBS------
 
 ' TODO: Finalize this method as the "main" method
@@ -88,7 +46,7 @@ Sub outlookLinkToTrello()
 
     ' VARIABLE DECLARATION
     Dim objMail As Outlook.MailItem ' Create new Outlook MailItem object
-    Dim email As EmailData          ' Instantiate new email structure
+    Dim cardPayload As CardPayload  ' Instantiate new email structure
 
     'One and ONLY one message muse be selected
     If Application.ActiveExplorer.Selection.Count <> 1 Then
@@ -99,33 +57,79 @@ Sub outlookLinkToTrello()
     Set objMail = Application.ActiveExplorer.Selection.Item(1)
     
     ' transfer selected-mail data into email object
-    email.hyperlink = "outlook:" + objMail.EntryID
-    email.sender = objMail.Sender
-    email.subject = objMail.Subject
-    email.conversationID = objMail.ConversationID
-    email.receivedTime = Format(objMail.ReceivedTime, "yyyymmddhhnn")
+    cardPayload.mailUID = "outlook:" + objMail.EntryID
+    cardPayload.sender = objMail.Sender
+    cardPayload.subject = objMail.Subject
+    cardPayload.conversationID = objMail.ConversationID
+    cardPayload.receivedTime = Format(objMail.ReceivedTime, "yyyymmddhhnn")
+    cardPayload.listID = getCachedListID()
+    cardPayload.key = getCachedKey()
+    cardPayload.token = getCachedToken()
 
-    trelloCreateCard(email)
+    ' Collect Card Name from InputBox
+    ' TODO: add error checking
+    cardPayload.cardName = InputBox("Please enter Card name here:")
+
+    cardPayload.cardID = trelloCreateCard(cardPayload)
+
+    MsgBox cardPayload.cardID
 
 End Sub
 
 '------FUNCTIONS------
 
-' TODO: Create new Card
-Function trelloCreateCard(email as EmailData) as Boolean
+' Create new Card with CardPayload object as input
+Function trelloCreateCard(cardPayload as CardPayload) As String
     ' Use this method to create a card with custom fields and attachments, and to provide
     ' useful feedback in the event of an operation failure.
-    ' https://docs.microsoft.com/en-us/windows/win32/winhttp/winhttprequest?redirectedfrom=MSDN
+    ' https://developer.atlassian.com/cloud/trello/rest/api-group-actions/
+    ' https://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
+    ' https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms762278(v=vs.85)?redirectedfrom=MSDN
 
+    ' Data needed before creating card
+    Dim cardApiUrl As String
+    Dim cardID As String ' to be returned from POST request
+    Dim payload As String ' variable (in JSON format) to contain all of the parts required for the POST request
 
+    cardApiUrl = "https://api.trello.com/1/cards" ' URL for Trello API calls for Cards
 
+    ' Generate the payload
+    payload = "{""name"":""" & cardPayload.cardName & """, ""idList"":""" & cardPayload.listID & """, ""key"":""" & cardPayload.key & """, ""token"":""" & cardPayload.token & """, ""pos"":""top""}" 
+
+    ' Initiate HTTP interface object
+    ' https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms754586(v=vs.85)
+    Set objHTTP = CreateObject("MSXML2.ServerXMLHTTP")
+
+    objHTTP.open "POST", cardApiUrl, False ' stage a new POST request
+    objHTTP.SetRequestHeader "Content-type", "application/json" ' tell server what format to expect payload (JSON)
+    objHTTP.send payload ' send POST request to create card
+
+    cardID = objHTTP.responseText ' Server will return the newly created cardID, which will come in handy later
+
+    trelloCreateCard = cardID ' return cardID FIXME: This actually returns the entire response from the server lol
+
+End Function
+
+' TODO: Retrieve ListID from cache
+Function getCachedListID() As String
+    getCachedListID = ""
+End Function
+
+' TODO: Retrieve Key from cache
+Function getCachedKey() As String
+    getCachedKey = ""
+End Function
+
+' TODO: Retrieve Token from cache
+Function getCachedToken() As String
+    getCachedToken = ""
 End Function
 
 ' TODO: [V2.0] Setup function to configure all necessary parameters
 Function firstRunSetup() as Boolean
     ' Start by checking the registry to see if the system is configured to open "Outlook:" hyperlinks in outlook
-    If Not checkRegistryKeysForOutlookHyperlinking()
-        addRegistryKeysForOutlookHyperlinking()
+    ' If Not checkRegistryKeysForOutlookHyperlinking()
+    '     addRegistryKeysForOutlookHyperlinking()
     
     ' trelloCacheBoardID(trelloFindBoardID()) ' Walk user through finding BoardID, then cache it
     ' trelloCacheListID(trelloFindListID()) ' Walk user through finding ListID, then cache it
