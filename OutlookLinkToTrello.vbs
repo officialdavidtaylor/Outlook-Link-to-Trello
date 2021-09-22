@@ -76,9 +76,7 @@ Sub outlookLinkToTrello()
     ' TODO: add error checking
     cardPayload.cardName = InputBox("Please enter Card name here:")
 
-    trelloCreateCard cardPayload
-    
-    MsgBox ("Card Created with ID: " & cardPayload.cardID)
+    trelloCreateCard cardPayload ' Create new card based on the data in cardPayload
 
 End Sub
 
