@@ -11,33 +11,35 @@
 ' To package all necessary data before making HTTP requests to create Trello Card
 Type CardPayload
 
-    ' boardID As String ' This is not necessary for card creation
-    listID As String
-    cardID As String
-    cardName As String
-    sender As String
-    subject As String
-    mailUID As String
-    conversationID As String
-    receivedTime As String
+    listID As String            ' Trello List ID for card to be entered
+    cardID As String            ' Trello Card ID
+    cardName As String          ' Trello Card name
+    sender As String            ' Sender of email selected
+    subject As String           ' Subject of email selected
+    mailUID As String           ' UID of email selected
+    conversationID As String    ' conversationID of email selected
+    receivedTime As String      ' Time received of email selected
     ' TODO: Add file attachment support in the future: https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/file-object
 
-    token As String
-    key As String
+    cardCreated As Boolean      ' status variable for checking if card creation was successful
+
+    ' goal is to remove these from this object for security purposes
+    token As String             ' Trello API credentials: token
+    key As String               ' Trello API credentials: key
 
 End Type
 
 ' Structure for token and key cache
 Type TrelloCredentialCache
 
-    token As String
-    key AS String
-    username As String
+    token As String     ' API access token from Atlassian/Trello
+    key AS String       ' API access key from Atlassian/Trello
+    username As String  ' Trello username
 
 End Type
 
 '------CONSTANTS------
-    Public Const LIST_ID_LENGTH As Integer = 24
+Public Const LIST_ID_LENGTH As Integer = 24
 
 '------SUBS------
 
@@ -74,47 +76,58 @@ Sub outlookLinkToTrello()
     ' TODO: add error checking
     cardPayload.cardName = InputBox("Please enter Card name here:")
 
-    responseText = trelloCreateCard(cardPayload)
-    cardPayload.cardID = extractCardID(responseText)
-
-    MsgBox cardPayload.cardID
+    trelloCreateCard cardPayload
+    
+    MsgBox ("Card Created with ID: " & cardPayload.cardID)
 
 End Sub
 
 '------FUNCTIONS------
 
 ' Create new Card with CardPayload object as input
-Function trelloCreateCard(cardPayload As CardPayload) As String
+Sub trelloCreateCard(ByRef cardPayload As CardPayload)
     ' Use this method to create a card with custom fields and attachments, and to provide
     ' useful feedback in the event of an operation failure.
     ' https://developer.atlassian.com/cloud/trello/rest/api-group-actions/
     ' https://stackoverflow.com/questions/158633/how-can-i-send-an-http-post-request-to-a-server-from-excel-using-vba
     ' https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms762278(v=vs.85)?redirectedfrom=MSDN
 
-    ' Data needed before creating card
-    Dim cardApiUrl As String
-    Dim responseText As String ' to be returned from POST request
-    Dim payload As String ' variable (in JSON format) to contain all of the parts required for the POST request
+    ' VARIABLES
+    Dim cardApiUrl As String        ' URL needed to create a card
+    Dim attachmentApiUrl As String  ' URL needed to add an attachment to a card
+    Dim responseText As String      ' to be returned from POST request
+    Dim cardPayloadString As String ' variable (in JSON format) to contain all of the parts required for the POST request
+    Dim attachmentPayload As String ' To contain required info to add attachment to card
 
     cardApiUrl = "https://api.trello.com/1/cards" ' URL for Trello API calls for Cards
 
     ' Generate the payload
-    payload = "{""name"":""" & cardPayload.cardName & """, ""idList"":""" & cardPayload.listID & """, ""key"":""" & cardPayload.key & """, ""token"":""" & cardPayload.token & """, ""pos"":""top""}" 
+    cardPayloadString = "{""name"":""" & cardPayload.cardName & """, ""idList"":""" & cardPayload.listID & """, ""key"":""" & getCachedKey() & """, ""token"":""" & getCachedToken() & """, ""pos"":""top""}" 
 
-    ' Initiate HTTP interface object
-    ' https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms754586(v=vs.85)
+    ' CREATE TRELLO CARD
+    ' Initiate HTTP interface object: https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ms754586(v=vs.85)
     Set objHTTP = CreateObject("MSXML2.ServerXMLHTTP")
-
+    ' Prepare HTTP request
     objHTTP.open "POST", cardApiUrl, False ' stage a new POST request
     objHTTP.SetRequestHeader "Content-type", "application/json" ' tell server what format to expect payload (JSON)
-    objHTTP.send payload ' send POST request to create card
+    ' Send POST request
+    objHTTP.send cardPayloadString
+    ' save and process server response
+    responseText = objHTTP.responseText
+    cardPayload.cardID = extractCardID(responseText)
 
-    responseText = objHTTP.responseText ' Server will return the newly created cardID, which will come in handy later
+    ' ADD BACKLINK TO OUTLOOK AS ATTACHMENT TO TRELLO CARD
+    ' Construct API hyperlink with appropriate CardID
+    attachmentApiUrl = (cardApiUrl & "/" & cardPayload.cardID & "/attachments")
+    ' construct payload for HTTP request
+    attachmentPayload = "{""id"":""" & cardPayload.cardID & """, ""key"":""" & getCachedKey() & """, ""token"":""" & getCachedToken() & """, ""name"":""Email Link"", ""url"":""" & cardPayload.mailUID & """}" 
+    ' prepare HTTP request
+    objHTTP.open "POST", attachmentApiUrl, False ' stage a new POST request
+    objHTTP.SetRequestHeader "Content-type", "application/json" ' tell server what format to expect payload (JSON)
+    ' send POST request
+    objHTTP.send attachmentPayload
 
-    ' return server response
-    trelloCreateCard = responseText
-
-End Function
+End Sub
 
 ' Extract CardID from server response upon card creation
 Function extractCardID(responseText As String) As String
