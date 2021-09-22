@@ -36,6 +36,9 @@ Type TrelloCredentialCache
 
 End Type
 
+'------CONSTANTS------
+    Public Const LIST_ID_LENGTH As Integer = 24
+
 '------SUBS------
 
 ' TODO: Finalize this method as the "main" method
@@ -47,6 +50,7 @@ Sub outlookLinkToTrello()
     ' VARIABLE DECLARATION
     Dim objMail As Outlook.MailItem ' Create new Outlook MailItem object
     Dim cardPayload As CardPayload  ' Instantiate new email structure
+    Dim responseText As String      ' this variable to contain the text returned from the server after any HTTP request
 
     'One and ONLY one message muse be selected
     If Application.ActiveExplorer.Selection.Count <> 1 Then
@@ -70,7 +74,8 @@ Sub outlookLinkToTrello()
     ' TODO: add error checking
     cardPayload.cardName = InputBox("Please enter Card name here:")
 
-    cardPayload.cardID = trelloCreateCard(cardPayload)
+    responseText = trelloCreateCard(cardPayload)
+    cardPayload.cardID = extractCardID(responseText)
 
     MsgBox cardPayload.cardID
 
@@ -79,7 +84,7 @@ End Sub
 '------FUNCTIONS------
 
 ' Create new Card with CardPayload object as input
-Function trelloCreateCard(cardPayload as CardPayload) As String
+Function trelloCreateCard(cardPayload As CardPayload) As String
     ' Use this method to create a card with custom fields and attachments, and to provide
     ' useful feedback in the event of an operation failure.
     ' https://developer.atlassian.com/cloud/trello/rest/api-group-actions/
@@ -88,7 +93,7 @@ Function trelloCreateCard(cardPayload as CardPayload) As String
 
     ' Data needed before creating card
     Dim cardApiUrl As String
-    Dim cardID As String ' to be returned from POST request
+    Dim responseText As String ' to be returned from POST request
     Dim payload As String ' variable (in JSON format) to contain all of the parts required for the POST request
 
     cardApiUrl = "https://api.trello.com/1/cards" ' URL for Trello API calls for Cards
@@ -104,9 +109,23 @@ Function trelloCreateCard(cardPayload as CardPayload) As String
     objHTTP.SetRequestHeader "Content-type", "application/json" ' tell server what format to expect payload (JSON)
     objHTTP.send payload ' send POST request to create card
 
-    cardID = objHTTP.responseText ' Server will return the newly created cardID, which will come in handy later
+    responseText = objHTTP.responseText ' Server will return the newly created cardID, which will come in handy later
 
-    trelloCreateCard = cardID ' return cardID FIXME: This actually returns the entire response from the server lol
+    ' return server response
+    trelloCreateCard = responseText
+
+End Function
+
+' Extract CardID from server response upon card creation
+Function extractCardID(responseText As String) As String
+
+    ' VARIABLE DECLARATION
+    Dim listIdOffset As Integer
+
+    listIdOffset = (InStr(responseText, """id"":*""") + 8) ' Determine where the List ID is contained in the string
+
+    ' return new CardID
+    extractCardID = Mid(responseText, listIdOffset, LIST_ID_LENGTH)
 
 End Function
 
