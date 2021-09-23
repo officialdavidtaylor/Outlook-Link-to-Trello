@@ -41,6 +41,7 @@ End Type
 '------CONSTANTS------
 Public Const LIST_ID_LENGTH As Integer = 24
 Public Const MAX_LOOP_ITERATIONS As Integer = 500
+Public Const HKEY_CLASSES_ROOT = &H80000000
 
 '------SUBS------
 
@@ -185,9 +186,17 @@ Function getCacheInfo()
     ' Return the cached info requested
 End Function
 
-' TODO: [V2.0] Registry content verification: Ensure handling of "outlook:" hyperlinks
-Function checkRegistryKeysForOutlookHyperlinking()
-    ' need to check for the right keys and return the status as a Boolean
+' Check Registry for Key, return as Boolean
+Function checkRegistryForKey(ByVal KeyPath As String) As Boolean
+
+    Dim oReg: Set oReg = GetObject("winmgmts:!root/default:StdRegProv")
+
+    If oReg.EnumKey(HKEY_CLASSES_ROOT, KeyPath, "", "") = 0 Then
+        checkRegistryForKey = True
+    Else
+        checkRegistryForKey = False
+    End If
+
 End Function
 
 ' TODO: [V2.0] Registry key addition to enable proper handling of "outlook:" hyperlinks
