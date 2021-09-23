@@ -40,6 +40,7 @@ End Type
 
 '------CONSTANTS------
 Public Const LIST_ID_LENGTH As Integer = 24
+Public Const MAX_LOOP_ITERATIONS As Integer = 500
 
 '------SUBS------
 
@@ -96,6 +97,7 @@ Sub trelloCreateCard(ByRef cardPayload As CardPayload)
     Dim responseText As String      ' to be returned from POST request
     Dim cardPayloadString As String ' variable (in JSON format) to contain all of the parts required for the POST request
     Dim attachmentPayload As String ' To contain required info to add attachment to card
+    Dim counter As Integer          ' used to ensure loops are ended eventually
 
     cardApiUrl = "https://api.trello.com/1/cards" ' URL for Trello API calls for Cards
 
@@ -113,6 +115,18 @@ Sub trelloCreateCard(ByRef cardPayload As CardPayload)
     ' save and process server response
     responseText = objHTTP.responseText
     cardPayload.cardID = extractCardID(responseText)
+
+    ' check cardID length to ensure it has been saved correctly
+    Do
+        If (Len(cardPayload.cardID) < 23) Then
+            counter = counter + 1
+            If (counter > MAX_LOOP_ITERATIONS) Then
+                MsgBox "Error: CardID fumbled, terminating hyperlink addition operation"
+                Exit Sub ' Cancel the hyperlink operation by ending the Sub
+            End If
+        End If
+        Exit Do ' If the Length is correct, proceed with the operation
+    Loop
 
     ' ADD BACKLINK TO OUTLOOK AS ATTACHMENT TO TRELLO CARD
     ' Construct API hyperlink with appropriate CardID
