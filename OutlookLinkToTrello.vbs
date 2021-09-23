@@ -29,6 +29,12 @@ Type CardPayload
 
 End Type
 
+' path and key name
+Type RegistryItem
+    path As String
+    key As String
+End Type
+
 ' Structure for token and key cache
 Type TrelloCredentialCache
 
@@ -41,7 +47,8 @@ End Type
 '------CONSTANTS------
 Public Const LIST_ID_LENGTH As Integer = 24
 Public Const MAX_LOOP_ITERATIONS As Integer = 500
-Public Const HKEY_CLASSES_ROOT = &H80000000
+Public Const HKEY_CLASSES_ROOT  = &H80000000
+Public Const HKEY_LOCAL_MACHINE = &H80000002
 
 '------SUBS------
 
@@ -187,17 +194,46 @@ Function getCacheInfo()
 End Function
 
 ' Check Registry for Key, return as Boolean
-Function checkRegistryForKey(ByVal KeyPath As String) As Boolean
+Function checkRegistryForKey(ByVal regItem As RegistryItem) As Boolean
 
     Dim oReg: Set oReg = GetObject("winmgmts:!root/default:StdRegProv")
 
-    If oReg.EnumKey(HKEY_CLASSES_ROOT, KeyPath, "", "") = 0 Then
+    If oReg.EnumKey(HKEY_CLASSES_ROOT, regItem.path, "", "") = 0 Then
         checkRegistryForKey = True
     Else
         checkRegistryForKey = False
     End If
 
 End Function
+
+' Find Data in Registry Key
+Function getRegistryKeyData(ByVal Key As String, ByVal KeyPath As String) As String
+
+End Function
+
+' Check to see if outlook hyperlinking is enabled in the registry
+Sub checkOutlookHyperlinkingStatus()
+    ' To modify the registry, see this article: https://docs.microsoft.com/en-us/windows/win32/wmisdk/obtaining-registry-data
+
+    ' Outlook's backend enables hyperlinking as a legacy feature, if the correct keys exist in the registry
+    ' The necessary registry structure is as follows:
+    ' - HKEY_CLASSES_ROOT\outlook
+    ' -- (Default) : "URL:Outlook Folders"
+    ' -- URL Protocol : ""
+    ' - HKEY_CLASSES_ROOT\outlook\DefaultIcon
+    ' -- (Default) : """C:\Program Files\Microsoft Office\root\Office16\1033\OUTLLIBR.DLL"", -9403"
+    ' - HKEY_CLASSES_ROOT\outlook\shell
+    ' -- (Default) : (value not set)
+    ' - HKEY_CLASSES_ROOT\outlook\shell\open
+    ' -- (Default) : ""
+    ' - HKEY_CLASSES_ROOT\outlook\shell\open\command
+    ' -- (Default) : """C:\Program Files\Microsoft Office\root\Office16\OUTLOOK.EXE"" /select ""%1"""
+
+    Dim outlookExeRegistryPath As String
+
+    outlookExeRegistryPath = "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\OUTLOOK.EXE"
+
+End Sub
 
 ' TODO: [V2.0] Registry key addition to enable proper handling of "outlook:" hyperlinks
 Function addRegistryKeysForOutlookHyperlinking()
