@@ -89,6 +89,29 @@ Sub outlookLinkToTrello()
 
 End Sub
 
+' Sub to put mail hyperlink in Clipboard
+Sub emailUrlToClipboard()
+
+    ' VARIABLE DECLARATION
+    Dim clipboard As MSForms.DataObject
+    Set clipboard = New MSForms.DataObject
+
+    Dim objMail As Outlook.MailItem ' Create new Outlook MailItem object
+    Dim mailUID As string ' create string to hold the URL
+
+    'One and ONLY one message muse be selected
+    If Application.ActiveExplorer.Selection.Count <> 1 Then
+        MsgBox ("Select one and ONLY one message.")
+        Exit Sub
+    End If
+
+    Set objMail = Application.ActiveExplorer.Selection.Item(1)
+    
+    ' put URL in clipboard
+    clipboard.SetText ("outlook:" + objMail.EntryID)
+    clipboard.PutInClipboard
+End Sub
+
 '------FUNCTIONS------
 
 ' Create new Card with CardPayload object as input
