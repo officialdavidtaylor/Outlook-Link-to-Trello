@@ -85,6 +85,11 @@ Sub outlookLinkToTrello()
     ' TODO: add error checking
     cardPayload.cardName = InputBox("Please enter Card name here:")
 
+    ' handle "cancel" condition, exit macro
+    If cardPayload.cardName = "" Then
+        Exit Sub
+    End If
+
     trelloCreateCard cardPayload ' Create new card based on the data in cardPayload
 
 End Sub
