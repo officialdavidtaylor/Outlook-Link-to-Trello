@@ -23,7 +23,7 @@ Function IniFileName() As String
   IniFileName = getConfigFilePath()
 End Function
 
-Private Function ReadIniFileString(ByVal Sect As String, ByVal Keyname As String) As String
+Public Function ReadIniFileString(ByVal Sect As String, ByVal Keyname As String) As String
 ' read ini file basedon 
   Dim Worked As Long
   Dim RetStr As String * 128
@@ -46,7 +46,7 @@ Private Function ReadIniFileString(ByVal Sect As String, ByVal Keyname As String
   ReadIniFileString = sIniString
 End Function
 
-Private Function WriteIniFileString(ByVal Sect As String, ByVal Keyname As String, ByVal Wstr As String) As String
+Public Function WriteIniFileString(ByVal Sect As String, ByVal Keyname As String, ByVal Wstr As String) As String
 ' write to ini file based on Section, Keyname, and Value
   Dim Worked As Long
 
