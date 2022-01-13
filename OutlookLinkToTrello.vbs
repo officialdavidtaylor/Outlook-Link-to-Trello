@@ -6,6 +6,24 @@
 ' Language: VBA [Outlook]
 '------------------------------------------------------------------------------
 
+'------DECLARATIONS------
+' use for reading/writing INI file
+#If VBA7 Then
+Private Declare PtrSafe Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
+Private Declare PtrSafe Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
+#Else
+Private Declare Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
+Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
+#End If
+
+' use to determine location of AppData folder
+Public Enum eSpecialFolders
+  SpecialFolder_AppData = &H1A        'for the current Windows user, on any computer on the network [Windows 98 or later]
+  SpecialFolder_CommonAppData = &H23  'for all Windows users on this computer [Windows 2000 or later]
+  SpecialFolder_LocalAppData = &H1C   'for the current Windows user, on this computer only [Windows 2000 or later]
+  SpecialFolder_Documents = &H5       'the Documents folder for the current Windows user
+End Enum
+
 '------STRUCTURES------
 
 ' To package all necessary data before making HTTP requests to create Trello Card
@@ -242,6 +260,17 @@ End Function
 ' Check to see if outlook hyperlinking is enabled in the registry
 Sub checkOutlookHyperlinkingStatus()
     ' To modify the registry, see this article: https://docs.microsoft.com/en-us/windows/win32/wmisdk/obtaining-registry-data
+
+    ' more registry notes and code: https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
+    ' Sub GetRegistryInfo() 
+    ' Dim strSection As String 
+    ' Dim strPgmDir As String 
+    ' strSection = "HKEY_CURRENT_USER\Software\Microsoft" _ 
+    ' & "\Office\12.0\Word\Options" 
+    ' strPgmDir = System.PrivateProfileString(FileName:="", _ 
+    ' Section:=strSection, Key:="PROGRAMDIR") 
+    ' MsgBox "The directory for Word is - " & strPgmDir 
+    ' End Sub
 
     ' Outlook's backend enables hyperlinking as a legacy feature, if the correct keys exist in the registry
     ' The necessary registry structure is as follows:
