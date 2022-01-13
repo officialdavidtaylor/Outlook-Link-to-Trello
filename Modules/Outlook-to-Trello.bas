@@ -1,66 +1,10 @@
 '------------------------------------------------------------------------------
-' Title:    Outlook Link With Trello
+' Title:    Outlook-to-Trello
 ' Desc:     Uploads the selected mail item from Outlook to a designated Trello
 '           board, creating a backlink that allows the user to open the
 '           original email item directly from the Trello card.
-' Language: VBA [Outlook]
+' Language: VBA [Outlook for Windows]
 '------------------------------------------------------------------------------
-
-'------DECLARATIONS------
-' use for reading/writing INI file
-#If VBA7 Then
-Private Declare PtrSafe Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-Private Declare PtrSafe Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
-#Else
-Private Declare Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
-#End If
-
-' use to determine location of AppData folder
-Public Enum eSpecialFolders
-  SpecialFolder_AppData = &H1A        'for the current Windows user, on any computer on the network [Windows 98 or later]
-  SpecialFolder_CommonAppData = &H23  'for all Windows users on this computer [Windows 2000 or later]
-  SpecialFolder_LocalAppData = &H1C   'for the current Windows user, on this computer only [Windows 2000 or later]
-  SpecialFolder_Documents = &H5       'the Documents folder for the current Windows user
-End Enum
-
-'------STRUCTURES------
-
-' To package all necessary data before making HTTP requests to create Trello Card
-Type CardPayload
-
-    listID As String            ' Trello List ID for card to be entered
-    cardID As String            ' Trello Card ID
-    cardName As String          ' Trello Card name
-    sender As String            ' Sender of email selected
-    subject As String           ' Subject of email selected
-    mailUID As String           ' UID of email selected
-    conversationID As String    ' conversationID of email selected
-    receivedTime As String      ' Time received of email selected
-    ' TODO: Add file attachment support in the future: https://docs.microsoft.com/en-us/office/vba/language/reference/user-interface-help/file-object
-
-    cardCreated As Boolean      ' status variable for checking if card creation was successful
-
-    ' goal is to remove these from this object for security purposes
-    token As String             ' Trello API credentials: token
-    key As String               ' Trello API credentials: key
-
-End Type
-
-' path and key name
-Type RegistryItem
-    path As String
-    key As String
-End Type
-
-' Structure for token and key cache
-Type TrelloCredentialCache
-
-    token As String     ' API access token from Atlassian/Trello
-    key AS String       ' API access key from Atlassian/Trello
-    username As String  ' Trello username
-
-End Type
 
 '------CONSTANTS------
 Public Const LIST_ID_LENGTH As Integer = 24
