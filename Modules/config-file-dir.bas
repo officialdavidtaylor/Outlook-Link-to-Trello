@@ -16,7 +16,8 @@ End Enum
 
 '------CONSTANTS------
 
-Public Const CONFIG_PATH As String = "\Outlook-to-Trello\config.ini"
+Public Const CONFIG_FOLDER As String = "\Outlook-to-Trello\"
+Public Const CONFIG_FILE As String = "config.ini"
 
 '------FUNCTIONS------
 
@@ -38,7 +39,19 @@ Function SpecialFolder(pFolder As eSpecialFolders) As String
 
 End Function
 
-Public Function getConfigPath()
+Public Function getConfigFilePath()
 ' return the path of config file in the directory specified in the CONFIG_PATH const
-  getConfigPath = SpecialFolder(SpecialFolder_AppData) & CONFIG_PATH
-End Sub
+  
+  configFolderPath = SpecialFolder(SpecialFolder_AppData) & CONFIG_FOLDER
+  configFilePath = configFolderPath & CONFIG_FILE
+  fileExists = Dir(configFilePath)
+  
+  If fileExists = "" Then
+    ' file does not exist, need to create new file
+    MkDir configFolderPath
+    Set objFSO = CreateObject("Scripting.FileSystemObject")
+    Set objFile = objFSO.CreateTextFile(configFilePath, False)
+  End If
+  
+  getConfigFilePath = configFilePath ' return path to file
+End Function
