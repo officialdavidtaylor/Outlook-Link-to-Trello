@@ -17,8 +17,8 @@ Public Const HKEY_LOCAL_MACHINE = &H80000002
 ' TODO: Finalize this method as the "main" method
 Sub OutlookToTrello()
 
-    'TODO: First Run Setup logic
-    ' firstRunSetup()
+    ' ensures that all necessary parameters are known before running the following code
+    firstRunSetup()
 
     ' VARIABLE DECLARATION
     Dim objMail As Outlook.MailItem ' Create new Outlook MailItem object
@@ -94,26 +94,6 @@ Function extractCardID(responseText As String) As String
 
 End Function
 
-' TODO: Retrieve ListID from cache
-Function getCachedListID() As String
-    getCachedListID = ""
-End Function
-
-' TODO: Retrieve Key from cache
-Function getCachedKey() As String
-    getCachedKey = ""
-End Function
-
-' TODO: Retrieve Token from cache
-Function getCachedToken() As String
-    getCachedToken = ""
-End Function
-
-' TODO: [V2.0] Get Cached Info
-Function getCacheInfo()
-    ' Return the cached info requested
-End Function
-
 ' Check Registry for Key, return as Boolean
 Function checkRegistryForKey(ByVal regItem As RegistryItem) As Boolean
 
@@ -172,35 +152,9 @@ Function addRegistryKeysForOutlookHyperlinking()
     ' need to add for the right keys and return the status as a Boolean
 End Function
 
-' TODO: [V2.0] Determine if Trello API Key and Token have been collected
-Function trelloCheckForCredentials()
-    ' if not, provide quick dialog box to collect it
-End Function
-
-' TODO: [V2.0] Cache Trello User ID
-Function trelloCacheUserID()
-    ' save the user ID for API purposes
-    ' https://stackoverflow.com/questions/12428293/best-way-to-cache-a-password-in-an-excel-vba-function
-End Function
-
-' TODO: [V2.0] Cache Trello Credentials
-Function trelloCacheCredentials()
-    ' https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
-End Function
-
 ' TODO: [V2.0] Find Board ID in Trello
 Function trelloFindBoardID() As String
     ' https://stackoverflow.com/questions/26552278/trello-api-getting-boards-lists-cards-information/50908600
-End Function
-
-' TODO: [V2.0] Cache Trello Board ID
-Function trelloCacheBoardID(boardID As String)
-    ' https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
-End Function
-
-' TODO: [V2.0] Retrieve Trello Board ID from cache
-Function trelloGetBoardID() As String
-    ' https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
 End Function
 
 ' TODO: [V2.0] Find List ID in Trello
@@ -208,17 +162,3 @@ Function trelloFindListID()
     ' https://stackoverflow.com/questions/26552278/trello-api-getting-boards-lists-cards-information/50908600
 End Function
 
-' TODO: [V2.0] Cache Trello List ID
-Function trelloCacheListID(boardID As String)
-    ' https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
-End Function
-
-' TODO: [V2.0] Retrieve Trello List ID from cache
-Function trelloGetListID() As String
-    ' https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
-End Function
-
-' TODO: [V2.0] Delete all cached data pertaining to Trello
-Function trelloClearCache()
-    ' https://docs.microsoft.com/en-us/office/vba/word/concepts/miscellaneous/storing-values-when-a-macro-ends
-End Function

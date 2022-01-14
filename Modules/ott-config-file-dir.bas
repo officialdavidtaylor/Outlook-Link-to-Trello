@@ -2,6 +2,7 @@
 ' Title:    config-file-dir
 ' Desc:     returns the location of the config.ini file.
 ' Language: VBA [Outlook for Windows]
+' FIXME: Verify that AppData is a folder I can actually write to :/
 '------------------------------------------------------------------------------
 
 '------DECLARATIONS------
@@ -21,7 +22,7 @@ Public Const CONFIG_FILE As String = "config.ini"
 
 '------FUNCTIONS------
 
-Function SpecialFolder(pFolder As eSpecialFolders) As String
+Private Function SpecialFolder(pFolder As eSpecialFolders) As String
 ' returns the path to the specified special folder (AppData etc)
 
   Dim objShell  As Object
@@ -47,10 +48,12 @@ Public Function getConfigFilePath()
   fileExists = Dir(configFilePath)
   
   If fileExists = "" Then
-    ' file does not exist, need to create new file
+    ' file does not exist, create new file
     MkDir configFolderPath
     Set objFSO = CreateObject("Scripting.FileSystemObject")
     Set objFile = objFSO.CreateTextFile(configFilePath, False)
+    ' initialize the ini file
+    iniWriteOutput = WriteIniFileString("app", "first-run-complete", "false")
   End If
   
   getConfigFilePath = configFilePath ' return path to file

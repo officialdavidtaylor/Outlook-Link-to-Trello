@@ -1,5 +1,5 @@
 '------------------------------------------------------------------------------
-' Title:    ini-rw
+' Title:    ini-helper-functions
 ' Desc:     uses Win API to read/write config file
 ' Language: VBA [Outlook for Windows]
 ' Note:     Special thanks to https://stackoverflow.com/users/11485/birger
@@ -18,11 +18,6 @@ Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePr
 
 '------FUNCTIONS------
 
-Function IniFileName() As String
-' relative path based on users environment, targeting AppData
-  IniFileName = getConfigFilePath()
-End Function
-
 Public Function ReadIniFileString(ByVal Sect As String, ByVal Keyname As String) As String
 ' read ini file basedon 
   Dim Worked As Long
@@ -37,7 +32,7 @@ Public Function ReadIniFileString(ByVal Sect As String, ByVal Keyname As String)
     sProfileString = ""
     RetStr = Space(128)
     StrSize = Len(RetStr)
-    Worked = GetPrivateProfileString(Sect, Keyname, "", RetStr, StrSize, IniFileName)
+    Worked = GetPrivateProfileString(Sect, Keyname, "", RetStr, StrSize, getConfigFilePath)
     If Worked Then
       iNoOfCharInIni = Worked
       sIniString = Left$(RetStr, Worked)
@@ -55,7 +50,7 @@ Public Function WriteIniFileString(ByVal Sect As String, ByVal Keyname As String
   If Sect = "" Or Keyname = "" Then
     MsgBox "Section Or Key To Write Not Specified !!!", vbExclamation, "INI"
   Else
-    Worked = WritePrivateProfileString(Sect, Keyname, Wstr, IniFileName)
+    Worked = WritePrivateProfileString(Sect, Keyname, Wstr, getConfigFilePath)
     If Worked Then
       iNoOfCharInIni = Worked
       sIniString = Wstr
