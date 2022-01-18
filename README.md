@@ -19,9 +19,9 @@ This project uses an ini file to enable data persistance. The schema can be foun
 
 ### Sections
 - [app]
- - first-run-complete : Boolean (safe to convert with CBool function)
+ - first-run-complete = Boolean (safe to convert with CBool function)
 - [trello]
- - api_key : API key
- - api_token : API token
- - user_id : Trello user ID for API requests
- - list_id : ListID of the target list for new cards
+ - api_key = API key
+ - api_token = API token
+ - user_id = Trello user ID for API requests
+ - list_id = ListID of the target list for new cards
