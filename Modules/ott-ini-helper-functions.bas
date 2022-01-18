@@ -2,59 +2,58 @@
 ' Title:    ini-helper-functions
 ' Desc:     uses Win API to read/write config file
 ' Language: VBA [Outlook for Windows]
-' Note:     Special thanks to https://stackoverflow.com/users/11485/birger
+' Note:     Special thanks to @dee-u https://www.vbforums.com/showthread.php?349993.html
 '------------------------------------------------------------------------------
 
 '------DECLARATIONS------
 
-' use for reading/writing INI file
-#If VBA7 Then
-Private Declare PtrSafe Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-Private Declare PtrSafe Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
-#Else
-Private Declare Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, ByVal lpFileName As String) As Long
-Private Declare Function WritePrivateProfileString Lib "kernel32" Alias "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, ByVal lpString As Any, ByVal lpFileName As String) As Long
-#End If
-
-'------FUNCTIONS------
-
-Public Function ReadIniFileString(ByVal Sect As String, ByVal Keyname As String) As String
-' read ini file basedon 
-  Dim Worked As Long
-  Dim RetStr As String * 128
-  Dim StrSize As Long
-
-  iNoOfCharInIni = 0
-  sIniString = ""
-  If Sect = "" Or Keyname = "" Then
-    MsgBox "Section Or Key To Read Not Specified !!!", vbExclamation, "INI"
+'declarations for working with Ini files
+Private Declare PtrSafe Function GetPrivateProfileSection Lib "kernel32" Alias _
+    "GetPrivateProfileSectionA" (ByVal lpAppName As String, ByVal lpReturnedString As String, _
+    ByVal nSize As Long, ByVal lpFileName As String) As Long
+ 
+Private Declare PtrSafe Function GetPrivateProfileString Lib "kernel32" Alias _
+    "GetPrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, _
+    ByVal lpDefault As String, ByVal lpReturnedString As String, ByVal nSize As Long, _
+    ByVal lpFileName As String) As Long
+ 
+Private Declare PtrSafe Function WritePrivateProfileSection Lib "kernel32" Alias _
+    "WritePrivateProfileSectionA" (ByVal lpAppName As String, ByVal lpString As String, _
+    ByVal lpFileName As String) As Long
+ 
+Private Declare PtrSafe Function WritePrivateProfileString Lib "kernel32" Alias _
+    "WritePrivateProfileStringA" (ByVal lpApplicationName As String, ByVal lpKeyName As Any, _
+    ByVal lpString As Any, ByVal lpFileName As String) As Long
+ 
+'// INI CONTROLLING PROCEDURES
+'reads an Ini string
+Public Function ReadIni(Section As String, Key As String) As String
+  Dim RetVal As String * 255, v As Long
+  v = GetPrivateProfileString(Section, Key, "", RetVal, 255, configFilePath)
+  If v Then
+    ReadIni = Left(RetVal, v)
   Else
-    sProfileString = ""
-    RetStr = Space(128)
-    StrSize = Len(RetStr)
-    Worked = GetPrivateProfileString(Sect, Keyname, "", RetStr, StrSize, getConfigFilePath)
-    If Worked Then
-      iNoOfCharInIni = Worked
-      sIniString = Left$(RetStr, Worked)
-    End If
+    ReadIni = 0
   End If
-  ReadIniFileString = sIniString
 End Function
-
-Public Function WriteIniFileString(ByVal Sect As String, ByVal Keyname As String, ByVal Wstr As String) As String
-' write to ini file based on Section, Keyname, and Value
-  Dim Worked As Long
-
-  iNoOfCharInIni = 0
-  sIniString = ""
-  If Sect = "" Or Keyname = "" Then
-    MsgBox "Section Or Key To Write Not Specified !!!", vbExclamation, "INI"
+ 
+'reads an Ini section
+Public Function ReadIniSection(Section As String) As String
+  Dim RetVal As String * 255, v As Long
+  v = GetPrivateProfileSection(Section, RetVal, 255, configFilePath)
+  If v Then
+    ReadIniSection = Left(RetVal, v)
   Else
-    Worked = WritePrivateProfileString(Sect, Keyname, Wstr, getConfigFilePath)
-    If Worked Then
-      iNoOfCharInIni = Worked
-      sIniString = Wstr
-    End If
-    WriteIniFileString = sIniString
+    ReadIni = 0
   End If
+End Function
+ 
+'writes an Ini string
+Public Function WriteIni(Section As String, Key As String, Value As String)
+  WriteIni = WritePrivateProfileString(Section, Key, Value, configFilePath)
+End Function
+ 
+'writes an Ini section
+Public Function WriteIniSection(Section As String, Value As String)
+  WriteIniSection = WritePrivateProfileSection(Section, Value, configFilePath)
 End Function

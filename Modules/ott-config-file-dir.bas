@@ -43,18 +43,23 @@ End Function
 Public Function getConfigFilePath()
 ' return the path of config file in the directory specified in the CONFIG_PATH const
   
-  configFolderPath = SpecialFolder(SpecialFolder_AppData) & CONFIG_FOLDER
-  configFilePath = configFolderPath & CONFIG_FILE
-  fileExists = Dir(configFilePath)
+  configFolderPath = SpecialFolder(SpecialFolder_Documents) & CONFIG_FOLDER
+  configFullPath = configFolderPath & CONFIG_FILE
+  ' check to see if the folder and file exist
+  folderExists = Dir(configFolderPath)
+  fileExists = Dir(configFullPath)
   
+  If folderExists = "" Then
+    'if folder doesn't exist, create it
+    MkDir configFolderPath
+  End If
   If fileExists = "" Then
     ' file does not exist, create new file
-    MkDir configFolderPath
     Set objFSO = CreateObject("Scripting.FileSystemObject")
-    Set objFile = objFSO.CreateTextFile(configFilePath, False)
+    Set objFile = objFSO.CreateTextFile(configFullPath, False)
     ' initialize the ini file
-    iniWriteOutput = WriteIniFileString("app", "first-run-complete", "false")
+    iniWriteOutput = WriteIni("app", "first-run-complete", "false")
   End If
   
-  getConfigFilePath = configFilePath ' return path to file
+  getConfigFilePath = configFullPath ' return path to file
 End Function

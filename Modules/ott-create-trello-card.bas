@@ -39,14 +39,14 @@ Public Function trelloCreateCard(ByRef cardPayload As CardPayload)
 
   ' check cardID length to ensure it has been saved correctly
   Do
-      If (Len(cardPayload.cardID) < 23) Then
-          counter = counter + 1
-          If (counter > MAX_LOOP_ITERATIONS) Then
-              MsgBox "Error: CardID fumbled, terminating hyperlink addition operation"
-              Exit Sub ' Cancel the hyperlink operation by ending the Sub
-          End If
+    If (Len(cardPayload.cardID) < 23) Then
+      counter = counter + 1
+      If (counter > MAX_LOOP_ITERATIONS) Then
+          MsgBox "Error: CardID fumbled, terminating hyperlink addition operation"
+          Exit Function ' Cancel the hyperlink operation by ending the Sub
       End If
-      Exit Do ' If the Length is correct, proceed with the operation
+    End If
+    Exit Do ' If the Length is correct, proceed with the operation
   Loop
 
   ' ADD BACKLINK TO OUTLOOK AS ATTACHMENT TO TRELLO CARD
